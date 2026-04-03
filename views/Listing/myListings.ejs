@@ -1,0 +1,123 @@
+<% layout("../Layouts/boilerplate") %>
+
+<style>
+  :root { --red: #FF385C; --dark-red: #E31C5F; }
+  .page-header { margin-bottom:30px; }
+  .page-header h1 { font-size:2rem; font-weight:800; color:#222; margin-bottom:6px; }
+  .page-header p  { color:#888; font-size:0.95rem; margin:0; }
+  .top-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:28px; }
+  .btn-add { display:inline-flex; align-items:center; gap:8px; background:var(--red); color:#fff; border-radius:12px; padding:11px 22px; font-weight:600; font-size:0.9rem; text-decoration:none; transition:all 0.25s; }
+  .btn-add:hover { background:var(--dark-red); color:#fff; text-decoration:none; transform:translateY(-2px); box-shadow:0 5px 16px rgba(255,56,92,0.3); }
+  .listings-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:22px; }
+  .listing-card { background:#fff; border-radius:16px; overflow:hidden; border:1.5px solid #eee; box-shadow:0 2px 10px rgba(0,0,0,0.05); transition:all 0.25s; }
+  .listing-card:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,0.1); }
+  .card-img-wrap { position:relative; width:100%; padding-top:60%; background:#f5f5f5; overflow:hidden; }
+  .card-img-wrap img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
+  .listing-card:hover .card-img-wrap img { transform:scale(1.06); }
+  .booking-overlay { position:absolute; bottom:10px; left:10px; border-radius:8px; padding:5px 11px; font-size:0.75rem; font-weight:700; display:flex; align-items:center; gap:5px; backdrop-filter:blur(6px); }
+  .booking-overlay.booked { background:rgba(220,38,38,0.88); color:#fff; }
+  .booking-overlay.free   { background:rgba(22,163,74,0.88); color:#fff; }
+  .card-body { padding:16px 18px; }
+  .card-title { font-size:1rem; font-weight:700; color:#222; margin-bottom:5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-location { color:#888; font-size:0.83rem; margin-bottom:10px; display:flex; align-items:center; gap:5px; }
+  .card-location i { color:var(--red); font-size:0.75rem; }
+  .card-price { font-size:0.92rem; font-weight:700; color:#222; margin-bottom:12px; }
+  .card-price span { font-weight:400; color:#999; font-size:0.82rem; }
+
+  /* Booking strips */
+  .booking-strip-wrap { margin-bottom:12px; }
+  .booking-strip { border-radius:8px; padding:9px 12px; font-size:0.81rem; margin-bottom:6px; }
+  .booking-strip.has-booking { background:#fff0f2; border:1px solid #fca5a5; color:#991b1b; }
+  .booking-strip.no-booking  { background:#f0fdf4; border:1px solid #86efac; color:#15803d; }
+  .booking-strip strong { display:block; font-weight:700; margin-bottom:2px; }
+  .booking-count-badge { display:inline-block; background:var(--red); color:#fff; border-radius:20px; padding:1px 10px; font-size:0.72rem; font-weight:700; margin-bottom:6px; }
+
+  .card-actions { display:flex; gap:8px; }
+  .btn-view { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; background:#f5f5f5; color:#333; border-radius:8px; padding:8px 12px; font-weight:600; font-size:0.82rem; text-decoration:none; transition:all 0.2s; }
+  .btn-view:hover { background:#e8e8e8; color:#333; text-decoration:none; }
+  .btn-edit-card { display:inline-flex; align-items:center; gap:5px; background:#222; color:#fff; border-radius:8px; padding:8px 12px; font-weight:600; font-size:0.82rem; text-decoration:none; transition:all 0.2s; }
+  .btn-edit-card:hover { background:#444; color:#fff; text-decoration:none; }
+  .btn-del-card { display:inline-flex; align-items:center; gap:5px; background:#fff; color:var(--red); border:1.5px solid #fca5a5; border-radius:8px; padding:7px 10px; font-weight:600; font-size:0.82rem; cursor:pointer; transition:all 0.2s; }
+  .btn-del-card:hover { background:var(--red); color:#fff; border-color:var(--red); }
+  .empty-state { text-align:center; padding:70px 20px; color:#bbb; grid-column:1/-1; }
+  .empty-state i { font-size:3.5rem; display:block; margin-bottom:14px; color:#e0e0e0; }
+  .empty-state h3 { font-size:1.25rem; color:#888; margin-bottom:8px; }
+</style>
+
+<div class="page-header">
+  <h1><i class="fas fa-home me-2" style="color:var(--red)"></i> My Listings</h1>
+  <p>Manage the properties you've listed on WonderLust</p>
+</div>
+
+<div class="top-row">
+  <div style="font-size:0.9rem;color:#888">
+    <% if (myListings.length > 0) { %>
+      You have <strong style="color:#222"><%= myListings.length %></strong> listing<%= myListings.length!==1?'s':'' %>
+    <% } %>
+  </div>
+  <a href="/listings/new" class="btn-add"><i class="fas fa-plus-circle"></i> Add New Listing</a>
+</div>
+
+<div class="listings-grid">
+  <% if (myListings.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-home"></i>
+      <h3>No listings yet</h3>
+      <p>Share your space with travellers worldwide!</p>
+      <a href="/listings/new" class="btn-add mt-3"><i class="fas fa-plus-circle"></i> Add Your First Listing</a>
+    </div>
+  <% } %>
+
+  <% for (let l of myListings) { %>
+    <% const bookings = bookingMap[l._id.toString()] || []; %>
+    <div class="listing-card">
+      <div class="card-img-wrap">
+        <img
+          src="<%= l.image?.url || 'https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70' %>"
+          alt="<%= l.title %>"
+          onerror="this.src='https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70'"
+        >
+        <% if (bookings.length > 0) { %>
+          <span class="booking-overlay booked"><i class="fas fa-calendar-check"></i> <%= bookings.length %> Booking<%= bookings.length>1?'s':'' %></span>
+        <% } else { %>
+          <span class="booking-overlay free"><i class="fas fa-check"></i> Available</span>
+        <% } %>
+      </div>
+
+      <div class="card-body">
+        <div class="card-title"><%= l.title %></div>
+        <div class="card-location"><i class="fas fa-map-marker-alt"></i> <%= l.location %>, <%= l.country %></div>
+        <div class="card-price">₹<%= l.price.toLocaleString("en-IN") %> <span>/ night</span></div>
+
+        <div class="booking-strip-wrap">
+          <% if (bookings.length === 0) { %>
+            <div class="booking-strip no-booking">
+              <strong><i class="fas fa-door-open me-1"></i> Fully Available</strong>
+              No active bookings right now
+            </div>
+          <% } else { %>
+            <div class="booking-count-badge"><i class="fas fa-calendar-check me-1"></i> <%= bookings.length %> active booking<%= bookings.length>1?'s':'' %></div>
+            <% for (let b of bookings) { %>
+              <div class="booking-strip has-booking">
+                <strong>
+                  <%= new Date(b.checkIn).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) %>
+                  → <%= new Date(b.checkOut).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %>
+                  · ₹<%= b.totalCost.toLocaleString("en-IN") %>
+                </strong>
+                <span>By <%= b.bookedBy?.email %></span>
+              </div>
+            <% } %>
+          <% } %>
+        </div>
+
+        <div class="card-actions">
+          <a href="/listings/<%= l._id %>" class="btn-view"><i class="fas fa-eye"></i> View</a>
+          <a href="/listings/<%= l._id %>/edit" class="btn-edit-card"><i class="fas fa-edit"></i> Edit</a>
+          <form action="/listings/<%= l._id %>?_method=DELETE" method="POST" style="margin:0">
+            <button class="btn-del-card" onclick="return confirm('Delete this listing?')"><i class="fas fa-trash-alt"></i></button>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>

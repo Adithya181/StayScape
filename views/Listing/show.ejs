@@ -1,540 +1,394 @@
-﻿<%layout("../Layouts/boilerplate")%>
+<% layout("../Layouts/boilerplate") %>
 
-  <style>
-    .show-container {
-      max-width: 1200px;
-      margin: 40px auto;
-      padding: 0 20px;
-    }
+<style>
+  :root { --red: #FF385C; --dark-red: #E31C5F; }
+  .show-wrap { max-width: 920px; margin: 0 auto; }
+  .back-link { display:inline-flex; align-items:center; gap:6px; color:#888; font-size:0.88rem; text-decoration:none; margin-bottom:18px; transition:color 0.2s; }
+  .back-link:hover { color:var(--red); text-decoration:none; }
+  .show-img { width:100%; height:420px; object-fit:cover; border-radius:20px; display:block; margin-bottom:28px; }
+  .show-header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:8px; }
+  .show-title { font-size:2rem; font-weight:800; color:#222; margin:0; }
+  .show-price { font-size:1.55rem; font-weight:800; color:#222; white-space:nowrap; }
+  .show-price span { font-size:0.88rem; font-weight:400; color:#888; }
+  .show-meta { display:flex; flex-wrap:wrap; gap:18px; color:#888; font-size:0.9rem; margin-bottom:18px; }
+  .show-meta i { color:var(--red); }
+  .show-desc { font-size:0.97rem; color:#555; line-height:1.8; padding-bottom:22px; border-bottom:1px solid #f0f0f0; margin-bottom:24px; }
+  .owner-strip { display:flex; align-items:center; gap:12px; background:#fafafa; border:1px solid #eee; border-radius:12px; padding:14px 18px; margin-bottom:26px; }
+  .owner-avatar { width:42px; height:42px; border-radius:50%; background:var(--red); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1rem; font-weight:800; flex-shrink:0; }
+  .owner-info strong { display:block; color:#222; font-size:0.9rem; }
+  .owner-info span { color:#999; font-size:0.8rem; }
+  .action-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:32px; }
+  .btn-edit { display:inline-flex; align-items:center; gap:7px; background:#222; color:#fff; border-radius:10px; padding:10px 20px; font-weight:600; font-size:0.88rem; text-decoration:none; transition:all 0.25s; }
+  .btn-edit:hover { background:#444; color:#fff; text-decoration:none; }
+  .btn-delete-listing { display:inline-flex; align-items:center; gap:7px; background:#fff; color:var(--red); border:2px solid var(--red); border-radius:10px; padding:8px 18px; font-weight:600; font-size:0.88rem; cursor:pointer; transition:all 0.25s; }
+  .btn-delete-listing:hover { background:var(--red); color:#fff; }
+  .booking-section { margin-bottom:36px; }
+  .section-title { font-size:1.25rem; font-weight:700; color:#222; display:flex; align-items:center; gap:10px; margin-bottom:18px; }
 
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: #222;
-      text-decoration: none;
-      font-weight: 500;
-      margin-bottom: 24px;
-      transition: all 0.3s ease;
-    }
+  /* Owner booking list */
+  .owner-booking-item { background:#f9f9f9; border:1px solid #eee; border-radius:10px; padding:12px 16px; margin-bottom:10px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; font-size:0.87rem; }
+  .owner-booking-item .obi-dates { color:#333; font-weight:600; }
+  .owner-booking-item .obi-who  { color:#888; font-size:0.81rem; }
+  .owner-booking-item .obi-cost { color:#14532d; font-weight:700; }
 
-    .back-link:hover {
-      color: #FF385C;
-      transform: translateX(-5px);
-    }
+  /* My booking card */
+  .my-booking-card { background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1.5px solid #86efac; border-radius:16px; padding:22px 24px; margin-bottom:16px; }
+  .my-booking-card .booking-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+  .my-booking-card h4 { font-size:1.05rem; font-weight:700; color:#14532d; margin:0; }
+  .confirmed-badge { background:#16a34a; color:#fff; border-radius:20px; padding:3px 14px; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+  .booking-details-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:18px; }
+  .booking-detail-box { background:rgba(255,255,255,0.75); border-radius:10px; padding:12px 14px; }
+  .booking-detail-box .label { font-size:0.72rem; font-weight:700; color:#166534; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+  .booking-detail-box .value { font-size:0.95rem; font-weight:700; color:#14532d; }
+  .booking-total { background:#16a34a; color:#fff; border-radius:10px; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .booking-total .label { font-size:0.82rem; opacity:0.85; }
+  .booking-total .amount { font-size:1.3rem; font-weight:800; }
+  .btn-cancel { display:inline-flex; align-items:center; gap:7px; background:#fff; color:#dc2626; border:2px solid #fca5a5; border-radius:10px; padding:10px 20px; font-weight:600; font-size:0.88rem; cursor:pointer; transition:all 0.25s; }
+  .btn-cancel:hover { background:#dc2626; color:#fff; border-color:#dc2626; }
 
-    .listing-detail-card {
-      background: #fff;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      margin-bottom: 40px;
-    }
+  /* Booked-dates notice */
+  .dates-notice { background:#fffbeb; border:1.5px solid #fcd34d; border-radius:12px; padding:14px 18px; margin-bottom:16px; font-size:0.86rem; color:#92400e; }
+  .dates-notice strong { display:block; margin-bottom:6px; color:#78350f; }
+  .booked-range-pill { display:inline-block; background:#fef3c7; border:1px solid #fcd34d; border-radius:6px; padding:2px 10px; margin:2px 4px 2px 0; font-size:0.8rem; font-weight:600; color:#78350f; }
 
-    .listing-image-container {
-      position: relative;
-      width: 100%;
-      height: 500px;
-      overflow: hidden;
-      background: #f8f9fa;
-    }
+  /* Book form */
+  .book-form-card { background:#fff; border:1.5px solid #eee; border-radius:16px; padding:26px; box-shadow:0 4px 18px rgba(0,0,0,0.06); }
+  .book-form-card h4 { font-size:1.05rem; font-weight:700; color:#222; margin-bottom:20px; }
+  .date-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .form-label { display:block; font-weight:600; color:#333; font-size:0.83rem; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.4px; }
+  .form-control { width:100%; padding:11px 13px; border:1.5px solid #e0e0e0; border-radius:10px; font-size:0.93rem; box-sizing:border-box; transition:border-color 0.2s; font-family:inherit; }
+  .form-control:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px rgba(255,56,92,0.1); }
+  .cost-preview { background:#f8f8f8; border-radius:10px; padding:14px 16px; margin-bottom:16px; font-size:0.9rem; color:#555; display:none; }
+  .cost-preview .cost-line { display:flex; justify-content:space-between; margin-bottom:6px; }
+  .cost-preview .cost-total { display:flex; justify-content:space-between; font-weight:800; color:#222; font-size:1.05rem; padding-top:8px; border-top:1px solid #e0e0e0; }
+  .conflict-warning { background:#fff1f2; border:1.5px solid #fca5a5; border-radius:10px; padding:12px 15px; color:#991b1b; font-size:0.86rem; font-weight:600; margin-bottom:14px; display:none; }
+  .btn-book { width:100%; background:var(--red); color:#fff; border:none; border-radius:12px; padding:14px; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.3s; display:flex; align-items:center; justify-content:center; gap:9px; }
+  .btn-book:hover { background:var(--dark-red); transform:translateY(-2px); box-shadow:0 6px 20px rgba(255,56,92,0.3); }
+  .btn-book:disabled { background:#ccc; cursor:not-allowed; transform:none; box-shadow:none; }
 
-    .listing-main-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  .login-prompt { text-align:center; padding:22px; background:#fafafa; border:1.5px dashed #ddd; border-radius:14px; color:#888; }
+  .login-prompt a { color:var(--red); font-weight:600; text-decoration:none; }
 
-    .listing-content {
-      padding: 40px;
-    }
+  /* Reviews */
+  .star-rating { display:flex; flex-direction:row-reverse; gap:3px; }
+  .star-rating input { display:none; }
+  .star-rating label { font-size:1.7rem; cursor:pointer; color:#ddd; transition:color 0.15s; }
+  .star-rating label:hover, .star-rating label:hover ~ label, .star-rating input:checked ~ label { color:#FFB700; }
+  .review-card { background:#fff; border:1px solid #eee; border-radius:13px; padding:18px 20px; margin-bottom:14px; box-shadow:0 1px 5px rgba(0,0,0,0.04); }
+  .review-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px; }
+  .rev-user { display:flex; align-items:center; gap:10px; }
+  .rev-avatar { width:34px; height:34px; border-radius:50%; background:#555; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; }
+  .rev-email { font-weight:600; color:#222; font-size:0.88rem; }
+  .rev-date  { font-size:0.75rem; color:#bbb; }
+  .rev-body  { color:#555; font-size:0.93rem; line-height:1.65; }
+  .btn-del-rev { background:none; border:none; color:#ddd; cursor:pointer; font-size:0.82rem; padding:3px 7px; border-radius:6px; transition:all 0.2s; }
+  .btn-del-rev:hover { color:var(--red); background:#fff0f2; }
+  .no-reviews { text-align:center; padding:36px; color:#bbb; }
+  .no-reviews i { font-size:2.5rem; display:block; margin-bottom:10px; }
+  .review-form-card { background:#fff; border:1px solid #eee; border-radius:14px; padding:24px; margin-bottom:22px; }
+  .review-form-card h4 { font-size:1rem; font-weight:700; color:#222; margin-bottom:18px; }
+  .btn-submit-rev { background:var(--red); color:#fff; border:none; border-radius:10px; padding:11px 22px; font-weight:600; font-size:0.9rem; cursor:pointer; transition:all 0.25s; display:inline-flex; align-items:center; gap:7px; }
+  .btn-submit-rev:hover { background:var(--dark-red); box-shadow:0 4px 12px rgba(255,56,92,0.3); }
+  @media(max-width:576px) { .show-img{height:240px;border-radius:14px;} .show-title{font-size:1.45rem;} .date-row{grid-template-columns:1fr;} .booking-details-grid{grid-template-columns:1fr 1fr;} }
+</style>
 
-    .listing-header {
-      border-bottom: 1px solid #f0f0f0;
-      padding-bottom: 24px;
-      margin-bottom: 32px;
-    }
+<div class="show-wrap">
+  <a href="/listings" class="back-link"><i class="fas fa-arrow-left"></i> All Listings</a>
 
-    .listing-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #222;
-      margin-bottom: 12px;
-      line-height: 1.2;
-    }
+  <img class="show-img"
+    src="<%= curr.image?.url || 'https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70' %>"
+    alt="<%= curr.title %>"
+    onerror="this.src='https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70'"
+  >
 
-    .listing-location {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #717171;
-      font-size: 1rem;
-      margin-bottom: 16px;
-    }
+  <div class="show-header">
+    <h1 class="show-title"><%= curr.title %></h1>
+    <div class="show-price">₹<%= curr.price.toLocaleString("en-IN") %> <span>/ night</span></div>
+  </div>
 
-    .listing-location i {
-      color: #FF385C;
-    }
+  <div class="show-meta">
+    <span><i class="fas fa-map-marker-alt"></i> <%= curr.location %>, <%= curr.country %></span>
+    <span><i class="fas fa-star" style="color:#FFB700"></i> <%= curr.reviews.length %> review<%= curr.reviews.length !== 1 ? 's' : '' %></span>
+  </div>
 
-    .listing-price {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: #222;
-      margin-top: 12px;
-    }
+  <div class="show-desc"><%= curr.description %></div>
 
-    .price-label {
-      font-size: 1rem;
-      font-weight: 400;
-      color: #717171;
-    }
-
-    .listing-description-section {
-      margin-bottom: 32px;
-    }
-
-    .section-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #222;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .section-title i {
-      color: #FF385C;
-    }
-
-    .listing-description {
-      color: #484848;
-      font-size: 1rem;
-      line-height: 1.6;
-      white-space: pre-wrap;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 16px;
-      padding-top: 32px;
-      border-top: 1px solid #f0f0f0;
-    }
-
-    .btn-edit {
-      flex: 1;
-      background: #FF385C;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 14px 24px;
-      font-size: 1rem;
-      font-weight: 600;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.3s ease;
-    }
-
-    .btn-edit:hover {
-      background: #e0314f;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 56, 92, 0.3);
-      color: #fff;
-    }
-
-    .btn-delete {
-      flex: 1;
-      background: #fff;
-      color: #222;
-      border: 2px solid #ddd;
-      border-radius: 10px;
-      padding: 14px 24px;
-      font-size: 1rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .btn-delete:hover {
-      border-color: #dc3545;
-      color: #dc3545;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 24px;
-      margin-top: 24px;
-      padding: 24px;
-      background: #f8f9fa;
-      border-radius: 12px;
-    }
-
-    .info-item {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .info-label {
-      color: #717171;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .info-value {
-      color: #222;
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    /* â”€â”€ Reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-    .reviews-section {
-      background: #fff;
-      border-radius: 16px;
-      padding: 40px;
-      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(0, 0, 0, 0.05);
-      margin-bottom: 40px;
-    }
-
-    .review-form-card {
-      background: #f8f9fa;
-      border-radius: 12px;
-      padding: 28px;
-      margin-bottom: 36px;
-    }
-
-    .review-form-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #222;
-      margin-bottom: 20px;
-    }
-
-    .form-group {
-      margin-bottom: 18px;
-    }
-
-    .form-label {
-      display: block;
-      font-weight: 600;
-      color: #444;
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-    }
-
-    .form-control,
-    .form-select {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1.5px solid #ddd;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-      background: #fff;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-      outline: none;
-      border-color: #FF385C;
-    }
-
-    .btn-submit-review {
-      background: #FF385C;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 11px 24px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .btn-submit-review:hover {
-      background: #e0314f;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(255, 56, 92, 0.25);
-    }
-
-    .login-prompt {
-      background: #fff5f7;
-      border: 1px solid #ffd6de;
-      border-radius: 10px;
-      padding: 18px 24px;
-      margin-bottom: 32px;
-      color: #555;
-      font-size: 0.95rem;
-    }
-
-    .login-prompt a {
-      color: #FF385C;
-      font-weight: 600;
-      text-decoration: none;
-    }
-
-    .reviews-list {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .review-card {
-      background: #fff;
-      border: 1px solid #f0f0f0;
-      border-radius: 12px;
-      padding: 20px 24px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-    }
-
-    .review-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .star-rating {
-      color: #FFB400;
-      font-size: 1.1rem;
-      letter-spacing: 2px;
-    }
-
-    .review-date {
-      color: #aaa;
-      font-size: 0.82rem;
-    }
-
-    .review-comment {
-      color: #484848;
-      font-size: 0.97rem;
-      line-height: 1.55;
-    }
-
-    .btn-delete-review {
-      background: none;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      color: #888;
-      font-size: 0.8rem;
-      padding: 4px 10px;
-      cursor: pointer;
-      margin-top: 12px;
-      transition: all 0.2s;
-    }
-
-    .btn-delete-review:hover {
-      border-color: #dc3545;
-      color: #dc3545;
-    }
-
-    .no-reviews {
-      color: #aaa;
-      font-style: italic;
-      text-align: center;
-      padding: 20px 0;
-    }
-
-    @media (max-width: 768px) {
-      .listing-image-container {
-        height: 300px;
-      }
-
-      .listing-content {
-        padding: 24px 20px;
-      }
-
-      .listing-title {
-        font-size: 1.5rem;
-      }
-
-      .action-buttons {
-        flex-direction: column;
-      }
-
-      .info-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .reviews-section {
-        padding: 24px 20px;
-      }
-    }
-  </style>
-
-  <div class="show-container">
-
-    <!-- Back Link -->
-    <a href="/listings" class="back-link">
-      <i class="fas fa-arrow-left"></i>
-      <span>Back to all listings</span>
-    </a>
-
-    <!-- Listing Detail Card -->
-    <div class="listing-detail-card">
-
-      <div class="listing-image-container">
-        <img src="<%=curr.image.url%>" alt="<%=curr.title%>" class="listing-main-image">
-      </div>
-
-      <div class="listing-content">
-
-        <div class="listing-header">
-          <h1 class="listing-title">
-            <%=curr.title%>
-          </h1>
-          <div class="listing-location">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>
-              <%=curr.location%>, <%=curr.country%>
-            </span>
-          </div>
-          <div class="listing-price">
-            <%= new Intl.NumberFormat('en-IN', { style: 'currency' , currency: 'INR' }).format(curr.price) %>
-              <span class="price-label">/ night</span>
-          </div>
-        </div>
-
-        <div class="listing-description-section">
-          <h2 class="section-title">
-            <i class="fas fa-info-circle"></i>
-            <span>About this place</span>
-          </h2>
-          <p class="listing-description">
-            <%=curr.description%>
-          </p>
-        </div>
-
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label"><i class="fas fa-map-marker-alt me-1"></i> Location</span>
-            <span class="info-value">
-              <%=curr.location%>
-            </span>
-          </div>
-          <div class="info-item">
-            <span class="info-label"><i class="fas fa-globe me-1"></i> Country</span>
-            <span class="info-value">
-              <%=curr.country%>
-            </span>
-          </div>
-          <div class="info-item">
-            <span class="info-label"><i class="fas fa-rupee-sign me-1"></i> Price per night</span>
-            <span class="info-value">
-              <%= new Intl.NumberFormat('en-IN', { style: 'currency' , currency: 'INR' }).format(curr.price) %>
-            </span>
-          </div>
-        </div>
-
-        <!-- Owner-only: Edit & Delete buttons -->
-        <% if (currentUser && curr.owner && curr.owner._id.equals(currentUser._id)) { %>
-          <div class="action-buttons">
-            <a href="/listings/<%=curr._id%>/edit" class="btn-edit">
-              <i class="fas fa-edit"></i><span>Edit Listing</span>
-            </a>
-            <form action="/listings/<%=curr._id%>/?_method=DELETE" method="post" style="flex:1;">
-              <button type="submit" class="btn-delete" onclick="return confirm('Delete this listing?');">
-                <i class="fas fa-trash-alt"></i><span>Delete Listing</span>
-              </button>
-            </form>
-          </div>
-          <% } %>
-
+  <% if (curr.owner) { %>
+    <div class="owner-strip">
+      <div class="owner-avatar"><%= curr.owner.email.charAt(0).toUpperCase() %></div>
+      <div class="owner-info">
+        <strong>Hosted by <%= curr.owner.email %></strong>
+        <span>WonderLust host</span>
       </div>
     </div>
+  <% } %>
 
-    <!-- â•â• REVIEWS SECTION â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
-    <div class="reviews-section">
+  <%
+    const isOwner = currentUser && curr.owner &&
+      currentUser._id.toString() === curr.owner._id.toString();
+  %>
+  <% if (isOwner) { %>
+    <div class="action-row">
+      <a href="/listings/<%= curr._id %>/edit" class="btn-edit"><i class="fas fa-edit"></i> Edit Listing</a>
+      <form action="/listings/<%= curr._id %>?_method=DELETE" method="POST" style="margin:0">
+        <button type="submit" class="btn-delete-listing" onclick="return confirm('Delete this listing and all its bookings?')">
+          <i class="fas fa-trash-alt"></i> Delete
+        </button>
+      </form>
+    </div>
+  <% } %>
 
-      <h2 class="section-title">
-        <i class="fas fa-star"></i>
-        <span>Reviews (<%= curr.reviews.length %>)</span>
-      </h2>
+  <!-- ════ BOOKING SECTION ════ -->
+  <div class="booking-section">
+    <div class="section-title">
+      <i class="fas fa-calendar-check" style="color:var(--red)"></i> Booking
+      <% if (activeBookings.length > 0) { %>
+        <span style="background:#f5f5f5;color:#666;border-radius:20px;padding:2px 12px;font-size:0.78rem;font-weight:600;"><%= activeBookings.length %> active</span>
+      <% } %>
+    </div>
 
-      <!-- Add Review Form â€” only for logged-in users -->
-      <% if (currentUser) { %>
-        <div class="review-form-card">
-          <p class="review-form-title">Leave a Review</p>
-          <form action="/listings/<%=curr._id%>/reviews" method="POST">
-
-            <div class="form-group">
-              <label class="form-label" for="rating">Rating</label>
-              <select name="rating" id="rating" class="form-select" required>
-                <option value="" disabled selected>Select a rating</option>
-                <option value="5">â­â­â­â­â­ â€” Excellent (5)</option>
-                <option value="4">â­â­â­â­ â€” Good (4)</option>
-                <option value="3">â­â­â­ â€” Average (3)</option>
-                <option value="2">â­â­ â€” Poor (2)</option>
-                <option value="1">â­ â€” Terrible (1)</option>
-              </select>
+    <% if (isOwner) { %>
+      <!-- Owner view: list all bookings -->
+      <% if (activeBookings.length === 0) { %>
+        <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:18px 22px;color:#166534;font-weight:600;">
+          <i class="fas fa-check-circle me-2"></i> Your listing is fully available — no active bookings.
+        </div>
+      <% } else { %>
+        <% for (let ab of activeBookings) { %>
+          <div class="owner-booking-item">
+            <div>
+              <div class="obi-dates">
+                <i class="fas fa-sign-in-alt" style="color:var(--red);margin-right:4px"></i>
+                <%= new Date(ab.checkIn).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %>
+                &nbsp;→&nbsp;
+                <i class="fas fa-sign-out-alt" style="color:var(--red);margin-right:4px"></i>
+                <%= new Date(ab.checkOut).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %>
+                · <%= ab.totalNights %> night<%= ab.totalNights>1?'s':'' %>
+              </div>
+              <div class="obi-who"><i class="fas fa-user me-1"></i> <%= ab.bookedBy?.email %></div>
             </div>
+            <div class="obi-cost">₹<%= ab.totalCost.toLocaleString("en-IN") %></div>
+          </div>
+        <% } %>
+      <% } %>
 
-            <div class="form-group">
-              <label class="form-label" for="comment">Comment</label>
-              <textarea name="comment" id="comment" class="form-control" rows="4" placeholder="Share your experience..."
-                required></textarea>
+    <% } else if (!currentUser) { %>
+      <div class="login-prompt">
+        <i class="fas fa-calendar-alt" style="font-size:1.8rem;display:block;margin-bottom:10px;color:#ccc"></i>
+        <a href="/login">Log in</a> to book this listing
+      </div>
+
+    <% } else { %>
+      <!-- Non-owner logged-in user -->
+
+      <!-- Their existing bookings for this listing -->
+      <% for (let mb of myBookings) { %>
+        <div class="my-booking-card">
+          <div class="booking-header">
+            <h4><i class="fas fa-check-circle me-2"></i> Your Booking</h4>
+            <span class="confirmed-badge"><i class="fas fa-circle" style="font-size:0.5rem"></i> Active</span>
+          </div>
+          <div class="booking-details-grid">
+            <div class="booking-detail-box">
+              <div class="label"><i class="fas fa-sign-in-alt me-1"></i> Check-in</div>
+              <div class="value"><%= new Date(mb.checkIn).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></div>
             </div>
-
-            <button type="submit" class="btn-submit-review">
-              <i class="fas fa-paper-plane me-1"></i> Submit Review
+            <div class="booking-detail-box">
+              <div class="label"><i class="fas fa-sign-out-alt me-1"></i> Check-out</div>
+              <div class="value"><%= new Date(mb.checkOut).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></div>
+            </div>
+            <div class="booking-detail-box">
+              <div class="label"><i class="fas fa-moon me-1"></i> Nights</div>
+              <div class="value"><%= mb.totalNights %> nights</div>
+            </div>
+            <div class="booking-detail-box">
+              <div class="label"><i class="fas fa-tag me-1"></i> Rate</div>
+              <div class="value">₹<%= curr.price.toLocaleString("en-IN") %>/night</div>
+            </div>
+          </div>
+          <div class="booking-total">
+            <span class="label">Total Cost</span>
+            <span class="amount">₹<%= mb.totalCost.toLocaleString("en-IN") %></span>
+          </div>
+          <form action="/bookings/<%= mb._id %>/cancel?_method=DELETE" method="POST" style="margin:0">
+            <button type="submit" class="btn-cancel" onclick="return confirm('Cancel this booking?')">
+              <i class="fas fa-times-circle"></i> Cancel Booking
             </button>
           </form>
         </div>
-        <% } else { %>
-          <div class="login-prompt">
-            <i class="fas fa-lock me-1"></i>
-            Please <a href="/login">log in</a> to leave a review.
-          </div>
+      <% } %>
+
+      <!-- Show booked-dates notice if there are active bookings -->
+      <% if (activeBookings.length > 0) { %>
+        <div class="dates-notice">
+          <strong><i class="fas fa-calendar-times me-2"></i> Already booked on these dates — pick different ones:</strong>
+          <% for (let ab of activeBookings) { %>
+            <span class="booked-range-pill">
+              <%= new Date(ab.checkIn).toLocaleDateString('en-IN',{day:'numeric',month:'short'}) %>
+              –
+              <%= new Date(ab.checkOut).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %>
+            </span>
           <% } %>
+        </div>
+      <% } %>
 
-            <!-- Display Reviews -->
-            <% if (curr.reviews.length===0) { %>
-              <p class="no-reviews">No reviews yet. Be the first to share your experience!</p>
-              <% } else { %>
-                <div class="reviews-list">
-                  <% for (let rev of curr.reviews) { %>
-                    <div class="review-card">
-                      <div class="review-header">
-                        <div class="star-rating">
-                          <% for (let i=0; i < rev.rating; i++) { %>â­<% } %>
-                              <span style="color:#222; font-size:0.9rem; margin-left:6px;">(<%= rev.rating %>/5)</span>
-                        </div>
-                        <span class="review-date">
-                          <%= rev.createdAt ? rev.createdAt.toDateString() : '' %>
-                        </span>
-                      </div>
+      <!-- Book form — always shown to non-owners -->
+      <div class="book-form-card">
+        <h4><i class="fas fa-calendar-plus me-2" style="color:var(--red)"></i> Book This Place</h4>
+        <form action="/listings/<%= curr._id %>/book" method="POST" id="bookForm">
+          <div class="date-row">
+            <div>
+              <label class="form-label" for="checkIn">Check-in Date</label>
+              <input type="date" id="checkIn" name="checkIn" class="form-control" required>
+            </div>
+            <div>
+              <label class="form-label" for="checkOut">Check-out Date</label>
+              <input type="date" id="checkOut" name="checkOut" class="form-control" required>
+            </div>
+          </div>
 
-                      <p class="review-comment">
-                        <%=rev.comment%>
-                      </p>
+          <div class="conflict-warning" id="conflictWarn">
+            <i class="fas fa-exclamation-triangle me-2"></i> <span id="conflictMsg">Those dates overlap with an existing booking.</span>
+          </div>
 
-                      <% if (currentUser) { %>
-                        <form action="/listings/<%=curr._id%>/reviews/<%=rev._id%>?_method=DELETE" method="POST">
-                          <button type="submit" class="btn-delete-review"
-                            onclick="return confirm('Delete this review?');">
-                            <i class="fas fa-trash-alt"></i> Delete
-                          </button>
-                        </form>
-                        <% } %>
-                    </div>
-                    <% } %>
-                </div>
-                <% } %>
+          <div class="cost-preview" id="costPreview">
+            <div class="cost-line">
+              <span>₹<%= curr.price.toLocaleString("en-IN") %> × <span id="nightsCount">0</span> nights</span>
+              <span id="subtotal">₹0</span>
+            </div>
+            <div class="cost-total">
+              <span>Total</span>
+              <span id="totalCost">₹0</span>
+            </div>
+          </div>
 
-    </div><!-- end reviews-section -->
-
+          <button type="submit" class="btn-book" id="btnBook">
+            <i class="fas fa-bolt"></i> Book Now
+          </button>
+        </form>
+      </div>
+    <% } %>
   </div>
+
+  <!-- ════ REVIEWS ════ -->
+  <div class="section-title">
+    <i class="fas fa-star" style="color:#FFB700"></i> Reviews
+    <span style="background:#f5f5f5;color:#666;border-radius:20px;padding:2px 12px;font-size:0.78rem;font-weight:600;"><%= curr.reviews.length %></span>
+  </div>
+
+  <% if (currentUser) { %>
+    <div class="review-form-card">
+      <h4><i class="fas fa-pen me-2" style="color:var(--red)"></i> Leave a Review</h4>
+      <form action="/listings/<%= curr._id %>/reviews" method="POST">
+        <div style="margin-bottom:16px">
+          <label class="form-label">Rating</label>
+          <div class="star-rating">
+            <% for (let i = 5; i >= 1; i--) { %>
+              <input type="radio" id="star<%= i %>" name="rating" value="<%= i %>" <%= i===5?'required':'' %>>
+              <label for="star<%= i %>"><i class="fas fa-star"></i></label>
+            <% } %>
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="form-label" for="comment">Comment</label>
+          <textarea id="comment" name="comment" class="form-control" rows="3" placeholder="Share your experience..." required minlength="5"></textarea>
+        </div>
+        <button type="submit" class="btn-submit-rev"><i class="fas fa-paper-plane"></i> Submit</button>
+      </form>
+    </div>
+  <% } else { %>
+    <div class="login-prompt" style="margin-bottom:22px"><a href="/login">Log in</a> to leave a review</div>
+  <% } %>
+
+  <% if (curr.reviews.length === 0) { %>
+    <div class="no-reviews"><i class="fas fa-comment-slash"></i> No reviews yet</div>
+  <% } else { %>
+    <% for (let rev of curr.reviews) { %>
+      <div class="review-card">
+        <div class="review-top">
+          <div class="rev-user">
+            <div class="rev-avatar" style="background:hsl(<%= Math.abs(rev._id.toString().charCodeAt(0)*37)%360 %>,45%,42%)">G</div>
+            <div>
+              <div class="rev-email">Guest</div>
+              <% if (rev.createdAt) { %>
+                <div class="rev-date"><%= new Date(rev.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></div>
+              <% } %>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div><% for (let s=1;s<=5;s++) { %><i class="fas fa-star" style="color:<%= s<=rev.rating?'#FFB700':'#e0e0e0' %>"></i><% } %></div>
+            <% if (currentUser) { %>
+              <form action="/listings/<%= curr._id %>/reviews/<%= rev._id %>?_method=DELETE" method="POST" style="margin:0">
+                <button class="btn-del-rev" onclick="return confirm('Delete review?')"><i class="fas fa-times"></i></button>
+              </form>
+            <% } %>
+          </div>
+        </div>
+        <div class="rev-body"><%= rev.comment %></div>
+      </div>
+    <% } %>
+  <% } %>
+</div>
+
+<script>
+  const pricePerNight = <%= curr.price %>;
+  const checkInEl  = document.getElementById('checkIn');
+  const checkOutEl = document.getElementById('checkOut');
+  const preview    = document.getElementById('costPreview');
+  const conflictWarn = document.getElementById('conflictWarn');
+  const conflictMsg  = document.getElementById('conflictMsg');
+  const btnBook      = document.getElementById('btnBook');
+
+  // Booked ranges from server
+  const bookedRanges = <%- JSON.stringify(activeBookings.map(b => ({ ci: b.checkIn, co: b.checkOut }))) %>;
+
+  const today = new Date().toISOString().split('T')[0];
+  if (checkInEl)  checkInEl.min  = today;
+  if (checkOutEl) checkOutEl.min = today;
+
+  function fmtDate(d) {
+    return new Date(d).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  }
+
+  function checkConflict(ci, co) {
+    for (const r of bookedRanges) {
+      const rci = new Date(r.ci), rco = new Date(r.co);
+      if (ci < rco && co > rci) {
+        return `${fmtDate(r.ci)} – ${fmtDate(r.co)}`;
+      }
+    }
+    return null;
+  }
+
+  function updateForm() {
+    if (!checkInEl || !checkOutEl) return;
+    const ci = new Date(checkInEl.value);
+    const co = new Date(checkOutEl.value);
+    conflictWarn.style.display = 'none';
+    preview.style.display = 'none';
+    if (btnBook) btnBook.disabled = false;
+    if (!checkInEl.value || !checkOutEl.value || co <= ci) return;
+
+    const clash = checkConflict(ci, co);
+    if (clash) {
+      conflictMsg.textContent = `Those dates overlap with an existing booking (${clash}). Please choose different dates.`;
+      conflictWarn.style.display = 'block';
+      if (btnBook) btnBook.disabled = true;
+      return;
+    }
+    const nights = Math.round((co - ci) / 86400000);
+    const total  = nights * pricePerNight;
+    document.getElementById('nightsCount').textContent = nights;
+    document.getElementById('subtotal').textContent    = '₹' + total.toLocaleString('en-IN');
+    document.getElementById('totalCost').textContent   = '₹' + total.toLocaleString('en-IN');
+    preview.style.display = 'block';
+  }
+
+  if (checkInEl) {
+    checkInEl.addEventListener('change', () => {
+      if (checkOutEl) checkOutEl.min = checkInEl.value;
+      updateForm();
+    });
+  }
+  if (checkOutEl) checkOutEl.addEventListener('change', updateForm);
+</script>

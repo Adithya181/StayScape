@@ -1,0 +1,212 @@
+<% layout("../Layouts/boilerplate") %>
+
+<style>
+  :root { --red: #FF385C; --dark-red: #E31C5F; }
+
+  .page-header { margin-bottom:32px; }
+  .page-header h1 { font-size:2rem; font-weight:800; color:#222; margin-bottom:6px; }
+  .page-header p  { color:#888; font-size:0.95rem; margin:0; }
+
+  .tabs { display:flex; gap:8px; margin-bottom:28px; flex-wrap:wrap; }
+  .tab-btn {
+    padding:8px 20px; border-radius:22px; border:1.5px solid #e0e0e0;
+    background:#fff; font-weight:600; font-size:0.88rem; cursor:pointer;
+    transition:all 0.2s; color:#666;
+  }
+  .tab-btn.active { background:var(--red); color:#fff; border-color:var(--red); box-shadow:0 3px 10px rgba(255,56,92,0.25); }
+  .tab-btn:hover:not(.active) { border-color:var(--red); color:var(--red); }
+
+  .bookings-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:22px; }
+
+  .booking-card {
+    background:#fff; border-radius:16px; overflow:hidden;
+    border:1.5px solid #eee; box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    transition:transform 0.25s, box-shadow 0.25s;
+  }
+  .booking-card:hover { transform:translateY(-4px); box-shadow:0 8px 24px rgba(0,0,0,0.1); }
+  .booking-card.cancelled { opacity:0.65; }
+
+  .card-img-wrap { position:relative; width:100%; padding-top:55%; background:#f5f5f5; overflow:hidden; }
+  .card-img-wrap img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform 0.4s; }
+  .booking-card:hover .card-img-wrap img { transform:scale(1.05); }
+
+  .status-pill {
+    position:absolute; top:10px; right:10px;
+    border-radius:20px; padding:4px 12px; font-size:0.75rem; font-weight:700;
+    backdrop-filter:blur(6px);
+  }
+  .status-pill.confirmed { background:rgba(22,163,74,0.92); color:#fff; }
+  .status-pill.cancelled { background:rgba(156,163,175,0.92); color:#fff; }
+
+  .card-body { padding:18px 20px; }
+  .card-title { font-size:1rem; font-weight:700; color:#222; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-location { color:#888; font-size:0.84rem; margin-bottom:14px; display:flex; align-items:center; gap:5px; }
+  .card-location i { color:var(--red); }
+
+  .dates-row { display:flex; gap:10px; margin-bottom:14px; }
+  .date-box { flex:1; background:#f8f8f8; border-radius:8px; padding:10px 12px; }
+  .date-box .d-label { font-size:0.68rem; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; }
+  .date-box .d-value { font-size:0.88rem; font-weight:700; color:#222; }
+
+  .nights-cost { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border-radius:8px; margin-bottom:14px; }
+  .booking-card.cancelled .nights-cost { background:#f5f5f5; }
+  .nc-label { font-size:0.8rem; color:#555; }
+  .nc-amount { font-size:1.05rem; font-weight:800; color:#14532d; }
+  .booking-card.cancelled .nc-amount { color:#999; }
+
+  .card-actions { display:flex; gap:8px; }
+  .btn-view-listing {
+    flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    background:#222; color:#fff; border-radius:9px; padding:9px 14px;
+    font-weight:600; font-size:0.84rem; text-decoration:none; transition:all 0.2s;
+  }
+  .btn-view-listing:hover { background:#444; color:#fff; text-decoration:none; }
+  .btn-cancel-booking {
+    display:inline-flex; align-items:center; gap:6px;
+    background:#fff; color:var(--red); border:1.5px solid #fca5a5;
+    border-radius:9px; padding:8px 14px; font-weight:600; font-size:0.84rem;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .btn-cancel-booking:hover { background:var(--red); color:#fff; border-color:var(--red); }
+
+  .empty-state { text-align:center; padding:70px 20px; color:#bbb; grid-column:1/-1; }
+  .empty-state i { font-size:3.5rem; display:block; margin-bottom:16px; color:#e0e0e0; }
+  .empty-state h3 { font-size:1.25rem; color:#888; margin-bottom:8px; }
+  .empty-state a {
+    display:inline-flex; align-items:center; gap:7px; margin-top:16px;
+    background:var(--red); color:#fff; border-radius:10px; padding:11px 22px;
+    font-weight:600; font-size:0.9rem; text-decoration:none; transition:all 0.25s;
+  }
+  .empty-state a:hover { background:var(--dark-red); color:#fff; text-decoration:none; box-shadow:0 4px 14px rgba(255,56,92,0.3); }
+
+  .summary-bar {
+    background:#fff; border:1.5px solid #eee; border-radius:14px;
+    padding:18px 24px; margin-bottom:28px;
+    display:flex; flex-wrap:wrap; gap:24px; align-items:center;
+  }
+  .summary-item { text-align:center; }
+  .summary-item .s-num { font-size:1.6rem; font-weight:800; color:#222; line-height:1; }
+  .summary-item .s-label { font-size:0.78rem; color:#999; margin-top:3px; }
+  .summary-item.highlight .s-num { color:var(--red); }
+</style>
+
+<%
+  const confirmed = myBookings.filter(b => b.status === 'confirmed');
+  const cancelled = myBookings.filter(b => b.status === 'cancelled');
+  const totalSpent = confirmed.reduce((s, b) => s + b.totalCost, 0);
+%>
+
+<div class="page-header">
+  <h1><i class="fas fa-calendar-check me-2" style="color:var(--red)"></i> My Bookings</h1>
+  <p>All your travel plans in one place</p>
+</div>
+
+<!-- Summary bar -->
+<% if (myBookings.length > 0) { %>
+  <div class="summary-bar">
+    <div class="summary-item highlight">
+      <div class="s-num"><%= confirmed.length %></div>
+      <div class="s-label">Active Bookings</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-num"><%= cancelled.length %></div>
+      <div class="s-label">Cancelled</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-num" style="color:#16a34a">₹<%= totalSpent.toLocaleString("en-IN") %></div>
+      <div class="s-label">Total Spent (active)</div>
+    </div>
+  </div>
+<% } %>
+
+<!-- Filter tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="filterCards('all',this)">All (<%= myBookings.length %>)</button>
+  <button class="tab-btn" onclick="filterCards('confirmed',this)">Active (<%= confirmed.length %>)</button>
+  <button class="tab-btn" onclick="filterCards('cancelled',this)">Cancelled (<%= cancelled.length %>)</button>
+</div>
+
+<div class="bookings-grid" id="bookingsGrid">
+
+  <% if (myBookings.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-map-marked-alt"></i>
+      <h3>No bookings yet</h3>
+      <p>Explore listings and book your first stay!</p>
+      <a href="/listings"><i class="fas fa-globe"></i> Browse Listings</a>
+    </div>
+  <% } %>
+
+  <% for (let b of myBookings) { %>
+    <div class="booking-card <%= b.status %>" data-status="<%= b.status %>">
+      <div class="card-img-wrap">
+        <% if (b.listing) { %>
+          <img
+            src="<%= b.listing.image?.url || 'https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70' %>"
+            alt="<%= b.listing.title %>"
+            onerror="this.src='https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70'"
+          >
+        <% } else { %>
+          <img src="https://i0.wp.com/picjumbo.com/wp-content/uploads/beautiful-fall-nature-scenery-free-image.jpeg?w=2210&quality=70" alt="Listing">
+        <% } %>
+        <span class="status-pill <%= b.status %>">
+          <% if (b.status === 'confirmed') { %>
+            <i class="fas fa-check-circle me-1"></i> Confirmed
+          <% } else { %>
+            <i class="fas fa-ban me-1"></i> Cancelled
+          <% } %>
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="card-title"><%= b.listing ? b.listing.title : 'Listing Removed' %></div>
+        <div class="card-location">
+          <i class="fas fa-map-marker-alt"></i>
+          <%= b.listing ? b.listing.location + ', ' + b.listing.country : '—' %>
+        </div>
+
+        <div class="dates-row">
+          <div class="date-box">
+            <div class="d-label"><i class="fas fa-sign-in-alt me-1"></i> Check-in</div>
+            <div class="d-value"><%= new Date(b.checkIn).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></div>
+          </div>
+          <div class="date-box">
+            <div class="d-label"><i class="fas fa-sign-out-alt me-1"></i> Check-out</div>
+            <div class="d-value"><%= new Date(b.checkOut).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></div>
+          </div>
+        </div>
+
+        <div class="nights-cost">
+          <div class="nc-label"><i class="fas fa-moon me-1"></i> <%= b.totalNights %> night<%= b.totalNights>1?'s':'' %></div>
+          <div class="nc-amount">₹<%= b.totalCost.toLocaleString("en-IN") %></div>
+        </div>
+
+        <div class="card-actions">
+          <% if (b.listing) { %>
+            <a href="/listings/<%= b.listing._id %>" class="btn-view-listing">
+              <i class="fas fa-eye"></i> View Listing
+            </a>
+          <% } %>
+          <% if (b.status === 'confirmed') { %>
+            <form action="/bookings/<%= b._id %>/cancel?_method=DELETE" method="POST" style="margin:0">
+              <button class="btn-cancel-booking" onclick="return confirm('Cancel this booking?')">
+                <i class="fas fa-times"></i> Cancel
+              </button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+</div>
+
+<script>
+  function filterCards(status, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.booking-card').forEach(card => {
+      card.style.display = (status === 'all' || card.dataset.status === status) ? '' : 'none';
+    });
+  }
+</script>
