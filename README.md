@@ -107,3 +107,4 @@ Then open → **http://localhost:8080**
 <div align="center">
   <sub>Made with ❤️ by Adithya & Sameer</sub>
 </div>
+# Advanced search filters - coming soon
