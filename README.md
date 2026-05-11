@@ -65,7 +65,7 @@ StayScape/
 
 ## ⚙️ Setup & Installation
 
-```bash
+``bash
 # Clone the repo
 git clone https://github.com/Adithya181/StayScape.git
 cd StayScape
